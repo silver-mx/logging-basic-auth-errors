@@ -18,9 +18,6 @@ public class SecurityConfig {
     private CustomEntryPoint authenticationEntryPoint;
 
     @Autowired
-    private AuthLoggingFilter authLoggingFilter;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -33,6 +30,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthLoggingFilter authLoggingFilter() {
+        return new AuthLoggingFilter();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .anyRequest()
@@ -41,7 +43,7 @@ public class SecurityConfig {
                 .httpBasic()
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .and()
-                .addFilterAfter(authLoggingFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authLoggingFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
