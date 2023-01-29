@@ -1,32 +1,35 @@
 package com.example.logging;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig {
 
-    @Autowired
-    private CustomEntryPoint authenticationEntryPoint;
+    private final CustomEntryPoint authenticationEntryPoint;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .inMemoryAuthentication()
-                .withUser("user")
-                .password(passwordEncoder.encode("password"))
-                .authorities("ROLE_USER");
+    public SecurityConfig(CustomEntryPoint authenticationEntryPoint, PasswordEncoder passwordEncoder) {
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Bean
+    public InMemoryUserDetailsManager user() {
+        return new InMemoryUserDetailsManager(User
+                .withUsername("dnunez")
+                .password(passwordEncoder.encode("pass"))
+                .authorities("read")
+                .build());
     }
 
     @Bean
@@ -43,7 +46,7 @@ public class SecurityConfig {
                 .httpBasic()
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .and()
-                .addFilterBefore(authLoggingFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authLoggingFilter(), BasicAuthenticationFilter.class);
         return http.build();
     }
 }
